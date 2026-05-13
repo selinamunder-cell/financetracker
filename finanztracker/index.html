@@ -169,7 +169,10 @@
         <canvas id="histChart" role="img" aria-label="Verlaufsdiagramm 6 Monate"></canvas>
       </div>
     </div>
-    <h3>Letzte Einträge</h3>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <h3 style="margin-bottom:0;">Einträge</h3>
+      <button id="home-expand-btn" onclick="toggleHomeExpand()" style="background:none;border:none;color:var(--accent);font-family:var(--sans);font-size:13px;cursor:pointer;">Alle anzeigen</button>
+    </div>
     <div class="tx-list" id="home-list"></div>
   </div>
 
@@ -301,7 +304,36 @@
       <span>Review</span>
     </button>
   </nav>
-  <!-- EDIT SHEET -->
+  <!-- CAT ENTRIES SHEET -->
+  <div id="cat-overlay" onclick="closeCatSheet()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;"></div>
+  <div id="cat-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;max-height:75vh;background:var(--bg2);border-radius:20px 20px 0 0;padding:20px 16px calc(var(--safe-bot) + 20px);z-index:201;transform:translateY(100%);transition:transform 0.3s ease;overflow-y:auto;">
+    <div style="width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="font-size:17px;font-weight:500;" id="cat-sheet-title">Kategorie</div>
+      <button onclick="closeCatSheet()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;">×</button>
+    </div>
+    <div class="tx-list" id="cat-sheet-list"></div>
+  </div>
+
+  <!-- RECUR EDIT SHEET -->
+  <div id="redit-overlay" onclick="closeRecurEdit()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;"></div>
+  <div id="redit-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-radius:20px 20px 0 0;padding:20px 16px calc(var(--safe-bot) + 20px);z-index:201;transform:translateY(100%);transition:transform 0.3s ease;">
+    <div style="width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px;"></div>
+    <div style="font-size:17px;font-weight:500;margin-bottom:16px;">Fixposten bearbeiten</div>
+    <div class="type-row">
+      <button class="type-btn income" id="redit-btn-inc" onclick="setRecurEditType('income')">+ Einnahme</button>
+      <button class="type-btn expense" id="redit-btn-exp" onclick="setRecurEditType('expense')">− Ausgabe</button>
+    </div>
+    <div class="field"><label>Beschreibung</label><input type="text" id="redit-desc" autocomplete="off" /></div>
+    <div class="field"><label>Betrag (€)</label><input type="number" id="redit-amount" min="0" step="0.01" inputmode="decimal" /></div>
+    <div class="field"><label>Kategorie</label><select id="redit-cat"></select></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+      <button onclick="closeRecurEdit()" style="padding:14px;border-radius:14px;border:0.5px solid var(--border);background:none;color:var(--muted);font-family:var(--sans);font-size:15px;cursor:pointer;">Abbrechen</button>
+      <button onclick="saveRecurEdit()" style="padding:14px;border-radius:14px;border:none;background:var(--accent);color:#0f0f0f;font-family:var(--sans);font-size:15px;font-weight:500;cursor:pointer;">Speichern</button>
+    </div>
+  </div>
+
+</div>
   <div id="edit-overlay" onclick="closeEdit()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;"></div>
   <div id="edit-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-radius:20px 20px 0 0;padding:20px 16px calc(var(--safe-bot) + 20px);z-index:201;transform:translateY(100%);transition:transform 0.3s ease;">
     <div style="width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px;"></div>
@@ -620,6 +652,13 @@ function saveEdit() {
   renderAll();
 }
 
+let homeExpanded = false;
+
+function toggleHomeExpand() {
+  homeExpanded = !homeExpanded;
+  renderHome();
+}
+
 function renderHome() {
   const entries = getMonth(curYear, curMonth);
   const { inc, exp, bal } = totals(entries);
@@ -629,9 +668,13 @@ function renderHome() {
   balEl.className = 'hero-amount ' + (bal >= 0 ? 'pos' : 'neg');
   document.getElementById('h-income').textContent = fmt(inc);
   document.getElementById('h-expense').textContent = fmt(exp);
-  const sorted = [...entries].sort((a,b) => b.date.localeCompare(a.date)).slice(0,10);
+  const sorted = [...entries].sort((a,b) => b.date.localeCompare(a.date));
+  const shown = homeExpanded ? sorted : sorted.slice(0,5);
+  const btn = document.getElementById('home-expand-btn');
+  if(sorted.length <= 5) { btn.style.display = 'none'; }
+  else { btn.style.display = ''; btn.textContent = homeExpanded ? 'Weniger anzeigen' : `Alle ${sorted.length} anzeigen`; }
   const list = document.getElementById('home-list');
-  list.innerHTML = sorted.length ? sorted.map(e => txHTML(e)).join('') : `<div class="empty-state"><div class="empty-icon">📭</div>Keine Einträge diesen Monat</div>`;
+  list.innerHTML = shown.length ? shown.map(e => txHTML(e)).join('') : `<div class="empty-state"><div class="empty-icon">📭</div>Keine Einträge diesen Monat</div>`;
   renderHist();
 }
 
@@ -665,11 +708,11 @@ function renderRecur() {
     const ico = CAT_ICONS[r.cat]||'📦';
     const sign = r.type==='income'?'+':'−';
     const cls = r.type==='income'?'pos':'neg';
-    return `<div class="recur-item">
+    return `<div class="recur-item" onclick="openRecurEdit(${r.id})" style="cursor:pointer;">
       <div class="tx-icon ${r.type}">${ico}</div>
       <div class="tx-body"><div class="tx-name">${r.desc}</div><div class="tx-meta">${r.cat}</div></div>
       <div class="tx-amount ${cls}">${sign}${fmt(r.amount)}</div>
-      <button class="tx-del-btn" onclick="delRecur(${r.id})">×</button>
+      <button class="tx-del-btn" onclick="event.stopPropagation();delRecur(${r.id})">×</button>
     </div>`;
   }).join('');
 }
@@ -698,7 +741,7 @@ function renderReview() {
   const catEl = document.getElementById('rev-cats');
   if(!cats.length) { catEl.innerHTML = '<div class="empty-state">Keine Ausgaben</div>'; }
   else {
-    catEl.innerHTML = cats.map(([c,v],i)=>`<div class="cat-row"><div class="cat-dot" style="background:${COLORS[i%COLORS.length]}"></div><div class="cat-name">${CAT_ICONS[c]||'📦'} ${c}</div><div class="cat-amt">${fmt(v)}</div><div class="cat-pct">${Math.round(v/exp*100)}%</div></div>`).join('');
+    catEl.innerHTML = cats.map(([c,v],i)=>`<div class="cat-row" onclick="openCatSheet('${c}', getMonth(curYear,curMonth))" style="cursor:pointer;"><div class="cat-dot" style="background:${COLORS[i%COLORS.length]}"></div><div class="cat-name">${CAT_ICONS[c]||'📦'} ${c}</div><div class="cat-amt">${fmt(v)}</div><div class="cat-pct">${Math.round(v/exp*100)}% ›</div></div>`).join('');
   }
 
   // donut — rebuild canvas to avoid null parentElement crash after destroy
@@ -717,6 +760,64 @@ function renderReview() {
 function changeYear(d) {}
 
 function renderYear() { renderRange(); }
+
+function openCatSheet(cat, entries) {
+  const filtered = entries.filter(e => e.cat === cat).sort((a,b) => b.date.localeCompare(a.date));
+  document.getElementById('cat-sheet-title').textContent = `${CAT_ICONS[cat]||'📦'} ${cat}`;
+  document.getElementById('cat-sheet-list').innerHTML = filtered.map(e => txHTML(e)).join('');
+  const overlay = document.getElementById('cat-overlay');
+  const sheet = document.getElementById('cat-sheet');
+  overlay.style.display = 'block';
+  sheet.style.display = 'block';
+  requestAnimationFrame(() => sheet.style.transform = 'translateY(0)');
+}
+
+function closeCatSheet() {
+  const sheet = document.getElementById('cat-sheet');
+  sheet.style.transform = 'translateY(100%)';
+  setTimeout(() => { document.getElementById('cat-overlay').style.display = 'none'; sheet.style.display = 'none'; }, 300);
+}
+
+let recurEditId = null, recurEditType = 'income';
+
+function openRecurEdit(id) {
+  const r = state.recurring.find(x => x.id === id);
+  if(!r) return;
+  recurEditId = id; recurEditType = r.type;
+  document.getElementById('redit-desc').value = r.desc;
+  document.getElementById('redit-amount').value = r.amount;
+  setRecurEditType(r.type);
+  document.getElementById('redit-cat').innerHTML = (r.type==='income'?INC_CATS:EXP_CATS).map(c=>`<option${c===r.cat?' selected':''}>${c}</option>`).join('');
+  const overlay = document.getElementById('redit-overlay');
+  const sheet = document.getElementById('redit-sheet');
+  overlay.style.display = 'block'; sheet.style.display = 'block';
+  requestAnimationFrame(() => sheet.style.transform = 'translateY(0)');
+}
+
+function closeRecurEdit() {
+  const sheet = document.getElementById('redit-sheet');
+  sheet.style.transform = 'translateY(100%)';
+  setTimeout(() => { document.getElementById('redit-overlay').style.display = 'none'; sheet.style.display = 'none'; }, 300);
+}
+
+function setRecurEditType(t) {
+  recurEditType = t;
+  document.getElementById('redit-btn-inc').className = 'type-btn income' + (t==='income'?' active':'');
+  document.getElementById('redit-btn-exp').className = 'type-btn expense' + (t==='expense'?' active':'');
+  const cur = document.getElementById('redit-cat').value;
+  document.getElementById('redit-cat').innerHTML = (t==='income'?INC_CATS:EXP_CATS).map(c=>`<option${c===cur?' selected':''}>${c}</option>`).join('');
+}
+
+function saveRecurEdit() {
+  const desc = document.getElementById('redit-desc').value.trim();
+  const amount = parseFloat(document.getElementById('redit-amount').value);
+  const cat = document.getElementById('redit-cat').value;
+  if(!desc || !amount || isNaN(amount)) { showToast('Bitte alle Felder ausfüllen'); return; }
+  const idx = state.recurring.findIndex(x => x.id === recurEditId);
+  if(idx === -1) return;
+  state.recurring[idx] = { ...state.recurring[idx], desc, amount, cat, type: recurEditType };
+  save(); closeRecurEdit(); showToast('Fixposten aktualisiert ✓'); renderRecur();
+}
 
 function renderAll() {
   renderHome();

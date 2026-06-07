@@ -318,20 +318,33 @@
 
   <!-- CAT MANAGER SHEET -->
   <div id="catmgr-overlay" onclick="closeCatManager()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;"></div>
-  <div id="catmgr-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;max-height:80vh;background:var(--bg2);border-radius:20px 20px 0 0;padding:20px 16px calc(var(--safe-bot) + 20px);z-index:301;transform:translateY(100%);transition:transform 0.3s ease;overflow-y:auto;">
+  <div id="catmgr-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;max-height:88vh;background:var(--bg2);border-radius:20px 20px 0 0;padding:20px 16px calc(var(--safe-bot) + 20px);z-index:301;transform:translateY(100%);transition:transform 0.3s ease;overflow-y:auto;">
     <div style="width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
       <div style="font-size:17px;font-weight:500;">Kategorien verwalten</div>
       <button onclick="closeCatManager()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;">×</button>
     </div>
-    <div style="display:flex;gap:6px;margin-bottom:12px;">
+    <div style="display:flex;gap:6px;margin-bottom:14px;">
       <button onclick="setCatTab('income')" id="catmgr-inc-btn" style="flex:1;padding:8px;border-radius:10px;border:0.5px solid var(--green);background:var(--green-dim);color:var(--green);font-family:var(--sans);font-size:13px;cursor:pointer;">Einnahmen</button>
       <button onclick="setCatTab('expense')" id="catmgr-exp-btn" style="flex:1;padding:8px;border-radius:10px;border:0.5px solid var(--border);background:none;color:var(--muted);font-family:var(--sans);font-size:13px;cursor:pointer;">Ausgaben</button>
     </div>
-    <div id="catmgr-list" style="margin-bottom:14px;"></div>
-    <div style="display:flex;gap:8px;">
-      <input type="text" id="catmgr-input" placeholder="Neue Kategorie..." style="flex:1;padding:12px 14px;background:var(--bg3);border:0.5px solid var(--border);border-radius:12px;color:var(--text);font-family:var(--sans);font-size:14px;" />
-      <button onclick="addCat()" style="padding:12px 16px;border-radius:12px;border:none;background:var(--accent);color:#0f0f0f;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;">+</button>
+    <div id="catmgr-list" style="margin-bottom:16px;"></div>
+    <!-- ADD ROW -->
+    <div style="background:var(--bg3);border-radius:14px;padding:12px;border:0.5px solid var(--border);">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Neue Kategorie</div>
+      <!-- EMOJI PICKER -->
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Emoji wählen</div>
+        <div id="emoji-grid" style="display:flex;flex-wrap:wrap;gap:6px;max-height:120px;overflow-y:auto;"></div>
+        <div style="display:flex;gap:6px;margin-top:8px;">
+          <div id="catmgr-emoji-preview" style="width:40px;height:40px;border-radius:10px;background:var(--bg2);border:0.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📦</div>
+          <input type="text" id="catmgr-emoji-custom" placeholder="Eigenes Emoji eingeben..." maxlength="2" style="flex:1;padding:10px 12px;background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--sans);font-size:16px;" oninput="setCustomEmoji(this.value)" />
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="catmgr-input" placeholder="Name..." style="flex:1;padding:12px 14px;background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;color:var(--text);font-family:var(--sans);font-size:14px;" />
+        <button onclick="addCat()" style="padding:12px 20px;border-radius:12px;border:none;background:var(--accent);color:#0f0f0f;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;">Hinzufügen</button>
+      </div>
     </div>
   </div>
 
@@ -510,7 +523,7 @@ function renderRange() {
   }
 
   document.getElementById('yr-cats').innerHTML = cats.length
-    ? cats.map(([c,v],i)=>`<div class="cat-row"><div class="cat-dot" style="background:${COLORS[i%COLORS.length]}"></div><div class="cat-name">${CAT_ICONS[c]||'📦'} ${c}</div><div class="cat-amt">${fmt(v)}</div><div class="cat-pct">${exp>0?Math.round(v/exp*100):0}%</div></div>`).join('')
+    ? cats.map(([c,v],i)=>{ const allCats=[...state.incCats,...state.expCats]; const found=allCats.find(x=>catName(x)===c); const ico=found?catEmoji(found):(CAT_ICONS[c]||'📦'); return `<div class="cat-row"><div class="cat-dot" style="background:${COLORS[i%COLORS.length]}"></div><div class="cat-name">${ico} ${c}</div><div class="cat-amt">${fmt(v)}</div><div class="cat-pct">${exp>0?Math.round(v/exp*100):0}%</div></div>`; }).join('')
     : '<div class="empty-state">Keine Ausgaben</div>';
 
   const exEl = document.getElementById('yr-extremes');
@@ -598,7 +611,7 @@ function setType(t) {
   curType = t;
   document.getElementById('btn-inc').className = 'type-btn income' + (t==='income'?' active':'');
   document.getElementById('btn-exp').className = 'type-btn expense' + (t==='expense'?' active':'');
-  document.getElementById('f-cat').innerHTML = getCats(t).map(c=>`<option>${c}</option>`).join('');
+  document.getElementById('f-cat').innerHTML = getCats(t).map(c=>`<option value="${catName(c)}">${catDisplay(c)}</option>`).join('');
 }
 
 function addEntry() {
@@ -641,8 +654,15 @@ function delRecur(id) {
   save(); renderRecur(); renderHome();
 }
 
+function getEntryIcon(entry) {
+  const allCats = [...state.incCats, ...state.expCats];
+  const found = allCats.find(c => catName(c) === entry.cat);
+  if(found) return catEmoji(found);
+  return CAT_ICONS[entry.cat] || '📦';
+}
+
 function txHTML(e, showDel=true) {
-  const ico = CAT_ICONS[e.cat] || '📦';
+  const ico = getEntryIcon(e);
   const sign = e.type==='income' ? '+' : '−';
   const cls = e.type==='income' ? 'pos' : 'neg';
   return `<div class="tx-item" onclick="openEdit(${e.id})" style="cursor:pointer;">
@@ -667,7 +687,7 @@ function openEdit(id) {
   document.getElementById('edit-date').value = e.date;
   document.getElementById('edit-recur').checked = !!e.recurring;
   setEditType(e.type);
-  document.getElementById('edit-cat').innerHTML = getCats(e.type).map(c=>`<option${c===e.cat?' selected':''}>${c}</option>`).join('');
+  document.getElementById('edit-cat').innerHTML = getCats(e.type).map(c=>`<option value="${catName(c)}"${catName(c)===e.cat?' selected':''}>${catDisplay(c)}</option>`).join('');
   const overlay = document.getElementById('edit-overlay');
   const sheet = document.getElementById('edit-sheet');
   overlay.style.display = 'block';
@@ -689,7 +709,7 @@ function setEditType(t) {
   document.getElementById('edit-btn-inc').className = 'type-btn income' + (t==='income'?' active':'');
   document.getElementById('edit-btn-exp').className = 'type-btn expense' + (t==='expense'?' active':'');
   const cur = document.getElementById('edit-cat').value;
-  document.getElementById('edit-cat').innerHTML = getCats(t).map(c=>`<option${c===cur?' selected':''}>${c}</option>`).join('');
+  document.getElementById('edit-cat').innerHTML = getCats(t).map(c=>`<option value="${catName(c)}"${catName(c)===cur?' selected':''}>${catDisplay(c)}</option>`).join('');
 }
 
 function saveEdit() {
@@ -763,7 +783,9 @@ function renderRecur() {
   const list = document.getElementById('recur-list');
   if(!state.recurring.length) { list.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div>Noch keine Fixposten hinterlegt</div>`; return; }
   list.innerHTML = state.recurring.map(r => {
-    const ico = CAT_ICONS[r.cat]||'📦';
+    const allCats = [...state.incCats, ...state.expCats];
+    const found = allCats.find(c => catName(c) === r.cat);
+    const ico = found ? catEmoji(found) : (CAT_ICONS[r.cat]||'📦');
     const sign = r.type==='income'?'+':'−';
     const cls = r.type==='income'?'pos':'neg';
     return `<div class="recur-item" onclick="openRecurEdit(${r.id})" style="cursor:pointer;">
@@ -799,7 +821,10 @@ function renderReview() {
   const catEl = document.getElementById('rev-cats');
   if(!cats.length) { catEl.innerHTML = '<div class="empty-state">Keine Ausgaben</div>'; }
   else {
-    catEl.innerHTML = cats.map(([c,v],i)=>`<div class="cat-row" onclick="openCatSheet('${c}', getMonth(revYear,revMonth))" style="cursor:pointer;"><div class="cat-dot" style="background:${COLORS[i%COLORS.length]}"></div><div class="cat-name">${CAT_ICONS[c]||'📦'} ${c}</div><div class="cat-amt">${fmt(v)}</div><div class="cat-pct">${Math.round(v/exp*100)}% ›</div></div>`).join('');
+    catEl.innerHTML = cats.map(([c,v],i)=>{
+      const allCats=[...state.incCats,...state.expCats]; const found=allCats.find(x=>catName(x)===c); const ico=found?catEmoji(found):(CAT_ICONS[c]||'📦');
+      return `<div class="cat-row" onclick="openCatSheet('${c}', getMonth(revYear,revMonth))" style="cursor:pointer;"><div class="cat-dot" style="background:${COLORS[i%COLORS.length]}"></div><div class="cat-name">${ico} ${c}</div><div class="cat-amt">${fmt(v)}</div><div class="cat-pct">${Math.round(v/exp*100)}% ›</div></div>`;
+    }).join('');
   }
 
   // donut — rebuild canvas to avoid null parentElement crash after destroy
@@ -845,7 +870,7 @@ function openRecurEdit(id) {
   document.getElementById('redit-desc').value = r.desc;
   document.getElementById('redit-amount').value = r.amount;
   setRecurEditType(r.type);
-  document.getElementById('redit-cat').innerHTML = getCats(r.type).map(c=>`<option${c===r.cat?' selected':''}>${c}</option>`).join('');
+  document.getElementById('redit-cat').innerHTML = getCats(r.type).map(c=>`<option value="${catName(c)}"${catName(c)===r.cat?' selected':''}>${catDisplay(c)}</option>`).join('');
   const overlay = document.getElementById('redit-overlay');
   const sheet = document.getElementById('redit-sheet');
   overlay.style.display = 'block'; sheet.style.display = 'block';
@@ -863,7 +888,7 @@ function setRecurEditType(t) {
   document.getElementById('redit-btn-inc').className = 'type-btn income' + (t==='income'?' active':'');
   document.getElementById('redit-btn-exp').className = 'type-btn expense' + (t==='expense'?' active':'');
   const cur = document.getElementById('redit-cat').value;
-  document.getElementById('redit-cat').innerHTML = getCats(t).map(c=>`<option${c===cur?' selected':''}>${c}</option>`).join('');
+  document.getElementById('redit-cat').innerHTML = getCats(t).map(c=>`<option value="${catName(c)}"${catName(c)===cur?' selected':''}>${catDisplay(c)}</option>`).join('');
 }
 
 function saveRecurEdit() {
@@ -893,7 +918,7 @@ function openTypePie(type) {
       data:{ labels:cats.map(([c])=>c), datasets:[{ data:cats.map(([,v])=>Math.round(v*100)/100), backgroundColor:COLORS.slice(0,cats.length), borderWidth:0, hoverOffset:6 }]},
       options:{ responsive:true, maintainAspectRatio:false, cutout:'60%', plugins:{ legend:{ position:'right', labels:{ color:'rgba(240,237,232,0.7)', font:{size:11}, boxWidth:10, padding:10 } } } }
     });
-    document.getElementById('pie-cats').innerHTML = cats.map(([c,v],i)=>`<div class="cat-row"><div class="cat-dot" style="background:${COLORS[i%COLORS.length]}"></div><div class="cat-name">${CAT_ICONS[c]||'📦'} ${c}</div><div class="cat-amt">${fmt(v)}</div><div class="cat-pct">${total>0?Math.round(v/total*100):0}%</div></div>`).join('');
+    document.getElementById('pie-cats').innerHTML = cats.map(([c,v],i)=>{ const allCats=[...state.incCats,...state.expCats]; const found=allCats.find(x=>catName(x)===c); const ico=found?catEmoji(found):(CAT_ICONS[c]||'📦'); return `<div class="cat-row"><div class="cat-dot" style="background:${COLORS[i%COLORS.length]}"></div><div class="cat-name">${ico} ${c}</div><div class="cat-amt">${fmt(v)}</div><div class="cat-pct">${total>0?Math.round(v/total*100):0}%</div></div>`; }).join('');
   }
   const overlay=document.getElementById('pie-overlay'), sheet=document.getElementById('pie-sheet');
   overlay.style.display='block'; sheet.style.display='block';
@@ -908,9 +933,22 @@ function closeTypePie() {
 
 // CATEGORY MANAGER
 let catMgrTab = 'income';
+let selectedEmoji = '📦';
+let dragSrcIdx = null;
+
+const EMOJI_SUGGESTIONS = ['💼','💻','💡','🏠','🛒','🚗','🎬','💊','🛡️','📱','🍜','👕','📦','✈️','🎓','🏋️','🎮','🎵','🐾','🌿','💈','🍕','☕','🎁','🔧','📚','💰','🏦','🌍','🚀','🎨','🏖️','🍷','🎪','💅','🚿','🏡','🚌','⚽','🎭'];
+
+// Migrate: cats may be strings (old) or objects {name,emoji} (new)
+function catName(c) { return typeof c === 'object' ? c.name : c; }
+function catEmoji(c) { return typeof c === 'object' ? c.emoji : (CAT_ICONS[c] || '📦'); }
+function catDisplay(c) { return `${catEmoji(c)} ${catName(c)}`; }
+
+function getCats(type) { return type==='income' ? state.incCats : state.expCats; }
 
 function openCatManager() {
   catMgrTab = curType || 'income';
+  selectedEmoji = '📦';
+  buildEmojiGrid();
   renderCatMgr();
   const overlay=document.getElementById('catmgr-overlay'), sheet=document.getElementById('catmgr-sheet');
   overlay.style.display='block'; sheet.style.display='block';
@@ -921,7 +959,7 @@ function closeCatManager() {
   const sheet=document.getElementById('catmgr-sheet');
   sheet.style.transform='translateY(100%)';
   setTimeout(()=>{ document.getElementById('catmgr-overlay').style.display='none'; sheet.style.display='none'; },300);
-  setType(curType); // refresh dropdowns
+  setType(curType);
 }
 
 function setCatTab(t) {
@@ -935,23 +973,85 @@ function setCatTab(t) {
   renderCatMgr();
 }
 
+function buildEmojiGrid() {
+  const grid = document.getElementById('emoji-grid');
+  grid.innerHTML = EMOJI_SUGGESTIONS.map(e =>
+    `<button onclick="selectEmoji('${e}')" style="width:36px;height:36px;border-radius:8px;border:0.5px solid var(--border);background:var(--bg2);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="${e}">${e}</button>`
+  ).join('');
+}
+
+function selectEmoji(e) {
+  selectedEmoji = e;
+  document.getElementById('catmgr-emoji-preview').textContent = e;
+  document.getElementById('catmgr-emoji-custom').value = '';
+}
+
+function setCustomEmoji(val) {
+  const trimmed = [...val.trim()][0] || '📦';
+  selectedEmoji = trimmed;
+  document.getElementById('catmgr-emoji-preview').textContent = trimmed;
+}
+
 function renderCatMgr() {
   const cats = getCats(catMgrTab);
-  document.getElementById('catmgr-list').innerHTML = cats.map((c,i)=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);">
-      <span style="flex:1;font-size:14px;">${CAT_ICONS[c]||'📦'} ${c}</span>
-      <button onclick="delCat(${i})" style="background:var(--red-dim);border:none;color:var(--red);width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:16px;">×</button>
+  const list = document.getElementById('catmgr-list');
+  list.innerHTML = cats.map((c,i) => `
+    <div draggable="true"
+      ondragstart="dragStart(${i})"
+      ondragover="dragOver(event,${i})"
+      ondrop="dragDrop(${i})"
+      ondragend="dragEnd()"
+      id="catrow-${i}"
+      style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);touch-action:none;">
+      <span style="font-size:18px;cursor:grab;color:var(--muted);padding:0 4px;user-select:none;" title="Reihenfolge ändern">☰</span>
+      <span style="font-size:20px;width:28px;text-align:center;">${catEmoji(c)}</span>
+      <span style="flex:1;font-size:14px;">${catName(c)}</span>
+      <button onclick="delCat(${i})" style="background:var(--red-dim);border:none;color:var(--red);width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:16px;flex-shrink:0;">×</button>
     </div>`).join('');
+
+  // Touch drag support
+  list.querySelectorAll('[draggable]').forEach((row, i) => {
+    let ty = 0, startY = 0;
+    row.addEventListener('touchstart', e => { startY = e.touches[0].clientY; dragSrcIdx = i; }, {passive:true});
+    row.addEventListener('touchmove', e => {
+      ty = e.touches[0].clientY - startY;
+      row.style.transform = `translateY(${ty}px)`;
+      row.style.opacity = '0.7';
+      row.style.zIndex = '10';
+    }, {passive:true});
+    row.addEventListener('touchend', () => {
+      row.style.transform=''; row.style.opacity=''; row.style.zIndex='';
+      const itemH = row.offsetHeight;
+      const steps = Math.round(ty / itemH);
+      if(steps !== 0) moveCat(i, Math.max(0, Math.min(getCats(catMgrTab).length-1, i+steps)));
+    });
+  });
+}
+
+function dragStart(i) { dragSrcIdx = i; }
+function dragOver(e, i) { e.preventDefault(); }
+function dragDrop(i) { if(dragSrcIdx !== null && dragSrcIdx !== i) moveCat(dragSrcIdx, i); }
+function dragEnd() { dragSrcIdx = null; }
+
+function moveCat(from, to) {
+  const cats = getCats(catMgrTab);
+  const [item] = cats.splice(from, 1);
+  cats.splice(to, 0, item);
+  save(); renderCatMgr();
 }
 
 function addCat() {
   const input = document.getElementById('catmgr-input');
   const name = input.value.trim();
-  if(!name) return;
+  if(!name) { showToast('Bitte Namen eingeben'); return; }
   const cats = getCats(catMgrTab);
-  if(cats.includes(name)) { showToast('Kategorie existiert bereits'); return; }
-  cats.push(name);
-  save(); input.value=''; renderCatMgr(); showToast('Kategorie hinzugefügt ✓');
+  if(cats.some(c => catName(c) === name)) { showToast('Kategorie existiert bereits'); return; }
+  cats.push({ name, emoji: selectedEmoji });
+  save(); input.value='';
+  selectedEmoji = '📦';
+  document.getElementById('catmgr-emoji-preview').textContent = '📦';
+  document.getElementById('catmgr-emoji-custom').value = '';
+  renderCatMgr(); showToast('Kategorie hinzugefügt ✓');
 }
 
 function delCat(i) {

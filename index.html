@@ -154,12 +154,12 @@
       <div class="hero-label">Bilanz</div>
       <div class="hero-amount" id="h-balance">0 €</div>
       <div class="hero-grid">
-        <div class="hero-cell">
-          <div class="hero-cell-label">Einnahmen</div>
+        <div class="hero-cell" onclick="openTypePie('income')" style="cursor:pointer;">
+          <div class="hero-cell-label">Einnahmen ›</div>
           <div class="hero-cell-val pos" id="h-income">0 €</div>
         </div>
-        <div class="hero-cell">
-          <div class="hero-cell-label">Ausgaben</div>
+        <div class="hero-cell" onclick="openTypePie('expense')" style="cursor:pointer;">
+          <div class="hero-cell-label">Ausgaben ›</div>
           <div class="hero-cell-val neg" id="h-expense">0 €</div>
         </div>
       </div>
@@ -193,7 +193,7 @@
       <input type="number" id="f-amount" placeholder="0,00" min="0" step="0.01" inputmode="decimal" />
     </div>
     <div class="field">
-      <label>Kategorie</label>
+      <label style="display:flex;align-items:center;justify-content:space-between;">Kategorie <button onclick="openCatManager()" style="background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;font-family:var(--sans);">+ Verwalten</button></label>
       <select id="f-cat"></select>
     </div>
     <div class="field">
@@ -226,9 +226,9 @@
     <!-- MONAT -->
     <div id="rv-month-view">
       <div class="month-nav" style="margin-bottom:16px;">
-        <button onclick="changeMonth(-1)">‹</button>
+        <button onclick="changeRevMonth(-1)">‹</button>
         <div class="month-name" id="rev-month"></div>
-        <button onclick="changeMonth(1)">›</button>
+        <button onclick="changeRevMonth(1)">›</button>
       </div>
       <div class="hero" style="margin-bottom:16px;">
         <div class="hero-label">Sparquote</div>
@@ -304,6 +304,37 @@
       <span>Review</span>
     </button>
   </nav>
+  <!-- TYPE PIE SHEET -->
+  <div id="pie-overlay" onclick="closeTypePie()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;"></div>
+  <div id="pie-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-radius:20px 20px 0 0;padding:20px 16px calc(var(--safe-bot) + 20px);z-index:201;transform:translateY(100%);transition:transform 0.3s ease;">
+    <div style="width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="font-size:17px;font-weight:500;" id="pie-title">Kategorien</div>
+      <button onclick="closeTypePie()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;">×</button>
+    </div>
+    <div style="position:relative;height:220px;margin-bottom:12px;"><canvas id="pieChart"></canvas></div>
+    <div id="pie-cats"></div>
+  </div>
+
+  <!-- CAT MANAGER SHEET -->
+  <div id="catmgr-overlay" onclick="closeCatManager()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;"></div>
+  <div id="catmgr-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;max-height:80vh;background:var(--bg2);border-radius:20px 20px 0 0;padding:20px 16px calc(var(--safe-bot) + 20px);z-index:301;transform:translateY(100%);transition:transform 0.3s ease;overflow-y:auto;">
+    <div style="width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="font-size:17px;font-weight:500;">Kategorien verwalten</div>
+      <button onclick="closeCatManager()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;">×</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:12px;">
+      <button onclick="setCatTab('income')" id="catmgr-inc-btn" style="flex:1;padding:8px;border-radius:10px;border:0.5px solid var(--green);background:var(--green-dim);color:var(--green);font-family:var(--sans);font-size:13px;cursor:pointer;">Einnahmen</button>
+      <button onclick="setCatTab('expense')" id="catmgr-exp-btn" style="flex:1;padding:8px;border-radius:10px;border:0.5px solid var(--border);background:none;color:var(--muted);font-family:var(--sans);font-size:13px;cursor:pointer;">Ausgaben</button>
+    </div>
+    <div id="catmgr-list" style="margin-bottom:14px;"></div>
+    <div style="display:flex;gap:8px;">
+      <input type="text" id="catmgr-input" placeholder="Neue Kategorie..." style="flex:1;padding:12px 14px;background:var(--bg3);border:0.5px solid var(--border);border-radius:12px;color:var(--text);font-family:var(--sans);font-size:14px;" />
+      <button onclick="addCat()" style="padding:12px 16px;border-radius:12px;border:none;background:var(--accent);color:#0f0f0f;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;">+</button>
+    </div>
+  </div>
+
   <!-- CAT ENTRIES SHEET -->
   <div id="cat-overlay" onclick="closeCatSheet()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;"></div>
   <div id="cat-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;max-height:75vh;background:var(--bg2);border-radius:20px 20px 0 0;padding:20px 16px calc(var(--safe-bot) + 20px);z-index:201;transform:translateY(100%);transition:transform 0.3s ease;overflow-y:auto;">
@@ -344,8 +375,12 @@
     </div>
     <div class="field"><label>Beschreibung</label><input type="text" id="edit-desc" autocomplete="off" /></div>
     <div class="field"><label>Betrag (€)</label><input type="number" id="edit-amount" min="0" step="0.01" inputmode="decimal" /></div>
-    <div class="field"><label>Kategorie</label><select id="edit-cat"></select></div>
+    <div class="field"><label style="display:flex;align-items:center;justify-content:space-between;">Kategorie <button onclick="openCatManager()" style="background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;font-family:var(--sans);">+ Verwalten</button></label><select id="edit-cat"></select></div>
     <div class="field"><label>Datum</label><input type="date" id="edit-date" /></div>
+    <label class="recur-check" style="margin-bottom:14px;">
+      <input type="checkbox" id="edit-recur" />
+      <span>Monatlich wiederkehrend</span>
+    </label>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
       <button onclick="closeEdit()" style="padding:14px;border-radius:14px;border:0.5px solid var(--border);background:none;color:var(--muted);font-family:var(--sans);font-size:15px;cursor:pointer;">Abbrechen</button>
       <button onclick="saveEdit()" style="padding:14px;border-radius:14px;border:none;background:var(--accent);color:#0f0f0f;font-family:var(--sans);font-size:15px;font-weight:500;cursor:pointer;">Speichern</button>
@@ -357,14 +392,20 @@
 <script>
 const MONTHS = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 const CAT_ICONS = { Gehalt:'💼', Freelance:'💻', Nebeneinkommen:'💡', Miete:'🏠', Lebensmittel:'🛒', Transport:'🚗', Unterhaltung:'🎬', Gesundheit:'💊', Versicherung:'🛡️', Abonnements:'📱', Restaurants:'🍜', Kleidung:'👕', Sonstiges:'📦' };
-const COLORS = ['#5DCAA5','#85B7EB','#F0997B','#D4537E','#AFA9EC','#97C459','#EF9F27','#E24B4A','#5DCAA5','#B5D4F4'];
-const INC_CATS = ['Gehalt','Freelance','Nebeneinkommen','Sonstiges'];
-const EXP_CATS = ['Miete','Lebensmittel','Transport','Unterhaltung','Gesundheit','Versicherung','Abonnements','Restaurants','Kleidung','Sonstiges'];
+const COLORS = ['#5DCAA5','#85B7EB','#F0997B','#D4537E','#AFA9EC','#97C459','#EF9F27','#E24B4A','#534AB7','#B5D4F4'];
+const DEFAULT_INC_CATS = ['Gehalt','Freelance','Nebeneinkommen','Sonstiges'];
+const DEFAULT_EXP_CATS = ['Miete','Lebensmittel','Transport','Unterhaltung','Gesundheit','Versicherung','Abonnements','Restaurants','Kleidung','Sonstiges'];
+
+let state = { entries: [], recurring: [], incCats: [...DEFAULT_INC_CATS], expCats: [...DEFAULT_EXP_CATS] };
+try { const s = localStorage.getItem('ft2'); if(s) { const p=JSON.parse(s); state={...state,...p}; if(!p.incCats) state.incCats=[...DEFAULT_INC_CATS]; if(!p.expCats) state.expCats=[...DEFAULT_EXP_CATS]; } } catch(e){}
+
+function getCats(type) { return type==='income' ? state.incCats : state.expCats; }
 
 let curType = 'income';
 let curMonth = new Date().getMonth();
 let curYear = new Date().getFullYear();
-let curReviewYear = new Date().getFullYear();
+let revMonth = new Date().getMonth();
+let revYear = new Date().getFullYear();
 let rngFrom = null, rngTo = null;
 
 const RANGE_PRESETS = [
@@ -488,10 +529,7 @@ function renderRange() {
     </div>`;
 }
 
-let state = { entries: [], recurring: [] };
-try { const s = localStorage.getItem('ft2'); if(s) state = JSON.parse(s); } catch(e){}
-
-let histChart = null, catChart = null, yearChart = null, yrCatChart = null;
+let histChart = null, catChart = null, yearChart = null, yrCatChart = null, pieChart = null;
 
 function save() { try { localStorage.setItem('ft2', JSON.stringify(state)); } catch(e){} }
 
@@ -545,15 +583,22 @@ function changeMonth(d) {
   curMonth += d;
   if(curMonth < 0) { curMonth = 11; curYear--; }
   if(curMonth > 11) { curMonth = 0; curYear++; }
-  renderAll();
+  homeExpanded = false;
+  renderHome();
+}
+
+function changeRevMonth(d) {
+  revMonth += d;
+  if(revMonth < 0) { revMonth = 11; revYear--; }
+  if(revMonth > 11) { revMonth = 0; revYear++; }
+  renderReview();
 }
 
 function setType(t) {
   curType = t;
   document.getElementById('btn-inc').className = 'type-btn income' + (t==='income'?' active':'');
   document.getElementById('btn-exp').className = 'type-btn expense' + (t==='expense'?' active':'');
-  const cats = t === 'income' ? INC_CATS : EXP_CATS;
-  document.getElementById('f-cat').innerHTML = cats.map(c=>`<option>${c}</option>`).join('');
+  document.getElementById('f-cat').innerHTML = getCats(t).map(c=>`<option>${c}</option>`).join('');
 }
 
 function addEntry() {
@@ -565,8 +610,12 @@ function addEntry() {
   if(!desc || !amount || isNaN(amount) || !date) { showToast('Bitte alle Felder ausfüllen'); return; }
   const id = Date.now();
   state.entries.push({ id, desc, amount, cat, date, type: curType, recurring: recur });
-  if(recur) state.recurring.push({ id, desc, amount, cat, type: curType });
+  if(recur) {
+    state.recurring = state.recurring.filter(r => !(r.desc===desc && r.type===curType));
+    state.recurring.push({ id, desc, amount, cat, type: curType });
+  }
   save();
+  if(recur) generateRecurringEntries();
   document.getElementById('f-desc').value = '';
   document.getElementById('f-amount').value = '';
   document.getElementById('f-recur').checked = false;
@@ -581,7 +630,15 @@ function delEntry(id) {
 
 function delRecur(id) {
   state.recurring = state.recurring.filter(r => r.id !== id);
-  save(); renderRecur();
+  // remove all future auto-generated entries for this recurring item
+  const now = new Date();
+  state.entries = state.entries.filter(e => {
+    if(e.recurringId !== id) return true;
+    if(!e.autoGenerated) return true;
+    // keep past auto-generated (already "happened"), remove future
+    return e.date < now.toISOString().slice(0,10);
+  });
+  save(); renderRecur(); renderHome();
 }
 
 function txHTML(e, showDel=true) {
@@ -604,14 +661,13 @@ let editId = null, editType = 'income';
 function openEdit(id) {
   const e = state.entries.find(x => x.id === id);
   if(!e) return;
-  editId = id;
-  editType = e.type;
+  editId = id; editType = e.type;
   document.getElementById('edit-desc').value = e.desc;
   document.getElementById('edit-amount').value = e.amount;
   document.getElementById('edit-date').value = e.date;
+  document.getElementById('edit-recur').checked = !!e.recurring;
   setEditType(e.type);
-  const cats = e.type === 'income' ? INC_CATS : EXP_CATS;
-  document.getElementById('edit-cat').innerHTML = cats.map(c=>`<option${c===e.cat?' selected':''}>${c}</option>`).join('');
+  document.getElementById('edit-cat').innerHTML = getCats(e.type).map(c=>`<option${c===e.cat?' selected':''}>${c}</option>`).join('');
   const overlay = document.getElementById('edit-overlay');
   const sheet = document.getElementById('edit-sheet');
   overlay.style.display = 'block';
@@ -632,9 +688,8 @@ function setEditType(t) {
   editType = t;
   document.getElementById('edit-btn-inc').className = 'type-btn income' + (t==='income'?' active':'');
   document.getElementById('edit-btn-exp').className = 'type-btn expense' + (t==='expense'?' active':'');
-  const cats = t === 'income' ? INC_CATS : EXP_CATS;
   const cur = document.getElementById('edit-cat').value;
-  document.getElementById('edit-cat').innerHTML = cats.map(c=>`<option${c===cur?' selected':''}>${c}</option>`).join('');
+  document.getElementById('edit-cat').innerHTML = getCats(t).map(c=>`<option${c===cur?' selected':''}>${c}</option>`).join('');
 }
 
 function saveEdit() {
@@ -642,13 +697,16 @@ function saveEdit() {
   const amount = parseFloat(document.getElementById('edit-amount').value);
   const cat = document.getElementById('edit-cat').value;
   const date = document.getElementById('edit-date').value;
+  const recur = document.getElementById('edit-recur').checked;
   if(!desc || !amount || isNaN(amount) || !date) { showToast('Bitte alle Felder ausfüllen'); return; }
   const idx = state.entries.findIndex(x => x.id === editId);
   if(idx === -1) return;
-  state.entries[idx] = { ...state.entries[idx], desc, amount, cat, date, type: editType };
-  save();
-  closeEdit();
-  showToast('Eintrag aktualisiert ✓');
+  state.entries[idx] = { ...state.entries[idx], desc, amount, cat, date, type: editType, recurring: recur };
+  // sync recurring list
+  state.recurring = state.recurring.filter(r => r.id !== editId);
+  if(recur) state.recurring.push({ id: editId, desc, amount, cat, type: editType });
+  save(); closeEdit(); showToast('Eintrag aktualisiert ✓');
+  if(recur) generateRecurringEntries();
   renderAll();
 }
 
@@ -680,9 +738,9 @@ function renderHome() {
 
 function renderHist() {
   const labels = [], incD = [], expD = [];
-  for(let i=5;i>=0;i--) {
-    let m=curMonth-i, y=curYear;
-    if(m<0){m+=12;y--;}
+  for(let i=-2; i<=1; i++) {
+    let m=curMonth+i, y=curYear;
+    if(m<0){m+=12;y--;} if(m>11){m-=12;y++;}
     labels.push(MONTHS[m].slice(0,3));
     const t = totals(getMonth(y,m));
     incD.push(Math.round(t.inc*100)/100);
@@ -692,8 +750,8 @@ function renderHist() {
   histChart = new Chart(document.getElementById('histChart'), {
     type:'bar',
     data:{ labels, datasets:[
-      { label:'Einnahmen', data:incD, backgroundColor:'rgba(93,202,165,0.7)', borderRadius:4 },
-      { label:'Ausgaben', data:expD, backgroundColor:'rgba(240,153,123,0.7)', borderRadius:4 }
+      { label:'Einnahmen', data:incD, backgroundColor:labels.map((_,i)=>i===2?'rgba(93,202,165,0.9)':'rgba(93,202,165,0.4)'), borderRadius:4 },
+      { label:'Ausgaben', data:expD, backgroundColor:labels.map((_,i)=>i===2?'rgba(240,153,123,0.9)':'rgba(240,153,123,0.4)'), borderRadius:4 }
     ]},
     options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} },
       scales:{ x:{ grid:{display:false}, ticks:{color:'rgba(240,237,232,0.4)',font:{size:11}} },
@@ -718,9 +776,9 @@ function renderRecur() {
 }
 
 function renderReview() {
-  const entries = getMonth(curYear, curMonth);
+  const entries = getMonth(revYear, revMonth);
   const { inc, exp, bal } = totals(entries);
-  document.getElementById('rev-month').textContent = `${MONTHS[curMonth]} ${curYear}`;
+  document.getElementById('rev-month').textContent = `${MONTHS[revMonth]} ${revYear}`;
   document.getElementById('r-inc').textContent = fmt(inc);
   document.getElementById('r-exp').textContent = fmt(exp);
   const rate = inc>0 ? Math.round(bal/inc*100) : 0;
@@ -741,7 +799,7 @@ function renderReview() {
   const catEl = document.getElementById('rev-cats');
   if(!cats.length) { catEl.innerHTML = '<div class="empty-state">Keine Ausgaben</div>'; }
   else {
-    catEl.innerHTML = cats.map(([c,v],i)=>`<div class="cat-row" onclick="openCatSheet('${c}', getMonth(curYear,curMonth))" style="cursor:pointer;"><div class="cat-dot" style="background:${COLORS[i%COLORS.length]}"></div><div class="cat-name">${CAT_ICONS[c]||'📦'} ${c}</div><div class="cat-amt">${fmt(v)}</div><div class="cat-pct">${Math.round(v/exp*100)}% ›</div></div>`).join('');
+    catEl.innerHTML = cats.map(([c,v],i)=>`<div class="cat-row" onclick="openCatSheet('${c}', getMonth(revYear,revMonth))" style="cursor:pointer;"><div class="cat-dot" style="background:${COLORS[i%COLORS.length]}"></div><div class="cat-name">${CAT_ICONS[c]||'📦'} ${c}</div><div class="cat-amt">${fmt(v)}</div><div class="cat-pct">${Math.round(v/exp*100)}% ›</div></div>`).join('');
   }
 
   // donut — rebuild canvas to avoid null parentElement crash after destroy
@@ -787,7 +845,7 @@ function openRecurEdit(id) {
   document.getElementById('redit-desc').value = r.desc;
   document.getElementById('redit-amount').value = r.amount;
   setRecurEditType(r.type);
-  document.getElementById('redit-cat').innerHTML = (r.type==='income'?INC_CATS:EXP_CATS).map(c=>`<option${c===r.cat?' selected':''}>${c}</option>`).join('');
+  document.getElementById('redit-cat').innerHTML = getCats(r.type).map(c=>`<option${c===r.cat?' selected':''}>${c}</option>`).join('');
   const overlay = document.getElementById('redit-overlay');
   const sheet = document.getElementById('redit-sheet');
   overlay.style.display = 'block'; sheet.style.display = 'block';
@@ -805,7 +863,7 @@ function setRecurEditType(t) {
   document.getElementById('redit-btn-inc').className = 'type-btn income' + (t==='income'?' active':'');
   document.getElementById('redit-btn-exp').className = 'type-btn expense' + (t==='expense'?' active':'');
   const cur = document.getElementById('redit-cat').value;
-  document.getElementById('redit-cat').innerHTML = (t==='income'?INC_CATS:EXP_CATS).map(c=>`<option${c===cur?' selected':''}>${c}</option>`).join('');
+  document.getElementById('redit-cat').innerHTML = getCats(t).map(c=>`<option${c===cur?' selected':''}>${c}</option>`).join('');
 }
 
 function saveRecurEdit() {
@@ -817,6 +875,134 @@ function saveRecurEdit() {
   if(idx === -1) return;
   state.recurring[idx] = { ...state.recurring[idx], desc, amount, cat, type: recurEditType };
   save(); closeRecurEdit(); showToast('Fixposten aktualisiert ✓'); renderRecur();
+}
+
+// PIE CHART
+function openTypePie(type) {
+  const entries = getMonth(curYear, curMonth).filter(e => e.type === type);
+  const total = entries.reduce((s,e)=>s+e.amount,0);
+  const catMap = {};
+  entries.forEach(e=>{ catMap[e.cat]=(catMap[e.cat]||0)+e.amount; });
+  const cats = Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('pie-title').textContent = type==='income' ? '📈 Einnahmen nach Kategorie' : '📉 Ausgaben nach Kategorie';
+  if(pieChart) { pieChart.destroy(); pieChart = null; }
+  if(!cats.length) { document.getElementById('pie-cats').innerHTML='<div class="empty-state">Keine Einträge</div>'; }
+  else {
+    pieChart = new Chart(document.getElementById('pieChart'), {
+      type:'doughnut',
+      data:{ labels:cats.map(([c])=>c), datasets:[{ data:cats.map(([,v])=>Math.round(v*100)/100), backgroundColor:COLORS.slice(0,cats.length), borderWidth:0, hoverOffset:6 }]},
+      options:{ responsive:true, maintainAspectRatio:false, cutout:'60%', plugins:{ legend:{ position:'right', labels:{ color:'rgba(240,237,232,0.7)', font:{size:11}, boxWidth:10, padding:10 } } } }
+    });
+    document.getElementById('pie-cats').innerHTML = cats.map(([c,v],i)=>`<div class="cat-row"><div class="cat-dot" style="background:${COLORS[i%COLORS.length]}"></div><div class="cat-name">${CAT_ICONS[c]||'📦'} ${c}</div><div class="cat-amt">${fmt(v)}</div><div class="cat-pct">${total>0?Math.round(v/total*100):0}%</div></div>`).join('');
+  }
+  const overlay=document.getElementById('pie-overlay'), sheet=document.getElementById('pie-sheet');
+  overlay.style.display='block'; sheet.style.display='block';
+  requestAnimationFrame(()=>sheet.style.transform='translateY(0)');
+}
+
+function closeTypePie() {
+  const sheet=document.getElementById('pie-sheet');
+  sheet.style.transform='translateY(100%)';
+  setTimeout(()=>{ document.getElementById('pie-overlay').style.display='none'; sheet.style.display='none'; },300);
+}
+
+// CATEGORY MANAGER
+let catMgrTab = 'income';
+
+function openCatManager() {
+  catMgrTab = curType || 'income';
+  renderCatMgr();
+  const overlay=document.getElementById('catmgr-overlay'), sheet=document.getElementById('catmgr-sheet');
+  overlay.style.display='block'; sheet.style.display='block';
+  requestAnimationFrame(()=>sheet.style.transform='translateY(0)');
+}
+
+function closeCatManager() {
+  const sheet=document.getElementById('catmgr-sheet');
+  sheet.style.transform='translateY(100%)';
+  setTimeout(()=>{ document.getElementById('catmgr-overlay').style.display='none'; sheet.style.display='none'; },300);
+  setType(curType); // refresh dropdowns
+}
+
+function setCatTab(t) {
+  catMgrTab = t;
+  document.getElementById('catmgr-inc-btn').style.background = t==='income'?'var(--green-dim)':'none';
+  document.getElementById('catmgr-inc-btn').style.borderColor = t==='income'?'var(--green)':'var(--border)';
+  document.getElementById('catmgr-inc-btn').style.color = t==='income'?'var(--green)':'var(--muted)';
+  document.getElementById('catmgr-exp-btn').style.background = t==='expense'?'var(--red-dim)':'none';
+  document.getElementById('catmgr-exp-btn').style.borderColor = t==='expense'?'var(--red)':'var(--border)';
+  document.getElementById('catmgr-exp-btn').style.color = t==='expense'?'var(--red)':'var(--muted)';
+  renderCatMgr();
+}
+
+function renderCatMgr() {
+  const cats = getCats(catMgrTab);
+  document.getElementById('catmgr-list').innerHTML = cats.map((c,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);">
+      <span style="flex:1;font-size:14px;">${CAT_ICONS[c]||'📦'} ${c}</span>
+      <button onclick="delCat(${i})" style="background:var(--red-dim);border:none;color:var(--red);width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:16px;">×</button>
+    </div>`).join('');
+}
+
+function addCat() {
+  const input = document.getElementById('catmgr-input');
+  const name = input.value.trim();
+  if(!name) return;
+  const cats = getCats(catMgrTab);
+  if(cats.includes(name)) { showToast('Kategorie existiert bereits'); return; }
+  cats.push(name);
+  save(); input.value=''; renderCatMgr(); showToast('Kategorie hinzugefügt ✓');
+}
+
+function delCat(i) {
+  const cats = getCats(catMgrTab);
+  cats.splice(i,1);
+  save(); renderCatMgr();
+}
+
+// Generiert für jeden Fixposten einen Eintrag am 1. jedes Monats
+// von Erstellungsmonat bis 12 Monate in die Zukunft
+function generateRecurringEntries() {
+  const now = new Date();
+  const futureEnd = new Date(now.getFullYear(), now.getMonth() + 13, 0); // 12 Monate voraus
+
+  state.recurring.forEach(r => {
+    // Startmonat: aus dem frühesten vorhandenen Eintrag mit dieser recurringId ableiten,
+    // oder als Fallback den aktuellen Monat nehmen
+    const existingDates = state.entries
+      .filter(e => e.recurringId === r.id)
+      .map(e => e.date)
+      .sort();
+    const startStr = existingDates.length ? existingDates[0].slice(0,7) : now.toISOString().slice(0,7);
+    let d = new Date(startStr + '-01');
+
+    while(d <= futureEnd) {
+      const y = d.getFullYear();
+      const m = d.getMonth();
+      const dateStr = `${y}-${String(m+1).padStart(2,'0')}-01`;
+
+      const exists = state.entries.some(e =>
+        e.recurringId === r.id &&
+        e.date.startsWith(`${y}-${String(m+1).padStart(2,'0')}`)
+      );
+
+      if(!exists) {
+        state.entries.push({
+          id: Date.now() + Math.random(),
+          recurringId: r.id,
+          desc: r.desc,
+          amount: r.amount,
+          cat: r.cat,
+          date: dateStr,
+          type: r.type,
+          recurring: true,
+          autoGenerated: true
+        });
+      }
+      d.setMonth(d.getMonth() + 1);
+    }
+  });
+  save();
 }
 
 function renderAll() {
@@ -853,6 +1039,7 @@ if(!state.entries.length) {
   save();
 }
 
+generateRecurringEntries();
 renderAll();
 
 // Service Worker
